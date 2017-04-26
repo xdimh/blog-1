@@ -22,7 +22,7 @@ description:
 
 　　Redux本身很简单,我们的应用系统的整个状态一般会表示成一个对象,对象中存放了应用系统的各个状态,而Redux就替我们接管了这个对象,管理着这个对象的变更。在Redux中,我们只能通过dispatch action来变更这个State对象,然后Redux会有相应的叫Reducer的函数去处理这个action,这个函数接受两个参数,当前State对象,和action对象,然后进行相应的处理返回新的State。Redux再把State的变更告诉整个应用,此时应用再去进行相应变更的渲染。那么这里提到的action,Reducer是什么? action 和 Reducer又是怎样对应起来的? Redux又是怎么样将整个应用状态数据变更告知应用的?
 
-1. 黑科技之action
+*  黑科技之action
  
     Redux的三大原则其中之一就是:唯一改变State的方式是dispatch action。什么是action,action其实就是对发生的事情的一个描述对象。比如一次用户按钮点击,一次ajax请求,请求数据的返回等等这些在Redux中都可以用一个唯一对应的action去描述他们。在这个对象中必须包含一个key为type的字段,值为字符串常量,代表这个action的类型。这是用于后面Reducer处理的时候区分action的关键字段。比如这里的按钮点击,我们的action的type值可以是``XXX_BUTTON_CLICK``。因为是字符串常量,所以这里用大写进行区分。除了type字段之外,你还想在action中添加什么字段完全取决你自己,一般情况下我们有可能会带上需要传给Reducer的数据信息。所以完整的action可能会像下面一样:
    
@@ -37,7 +37,7 @@ description:
       }
    ```
    
-2. 黑科技之action creator 
+* 黑科技之action creator 
 
    顾名思义,action creator即那些仅仅用来创建并返回action对象的函数。这些函数很简单,只做一件事情,所以很方便测试。如上action,我们就可以有一个action creator来生成并返回上面的``XXX_BUTTON_CLICK`` action,如下:
    
@@ -51,9 +51,8 @@ description:
            }
        }
     }
-   ```
-   
-3. 黑科技之Reducer
+   ``` 
+* 黑科技之Reducer
 
    前面的action定义并描述了发生的事件,但是并没有指定对应的处理方法,那么这里的Reducer就是用来处理action所描述的事件的函数。该函数接受两个参数,分别是previous state 和 action。然后返回新的state。之所以称为Reducer,主要是因为这个函数的行为和数组原型中的reduce方法很像,``Array.prototype.reduce()``。在应用最开始的时候,Redux在没有初始state的时候,就会给state赋值undefined,为了避免这种情况,所以在Reducer的时候应该设置一个初始化状态。如下:
    
@@ -63,7 +62,6 @@ description:
        return newState;   
     }
    ```
-  
    在实践过程中,我们发现整个系统的State会变得比较大,而每一个Reducer需要关注的状态并不是全部的State,可能是其中的某一个状态数据,所以如果每次都将全部State传给只关注部分状态数据的Reducer,就会导致这个Reducer的处理逻辑变得复杂,你不得不在这个Reducer中通过action的type来处理特定的数据,这样就导致``switch case``变得冗长。所以Redux提供了一种拆分Reducer的方式,让某个Reducer只关注他需要关注的状态数据。最后在通过Redux的 combineReducers,将多个拆分的Reducers合成一个rootReducer,这个rootReducer会返回所有全部的state状态数据。代码如下:
   
    ```javascript
@@ -106,8 +104,8 @@ description:
    ```
 
     在了解action 和 处理action的Reducer之后,我们来看下Redux是怎么将这两者结合起来的。
-
-4. 黑科技之Store
+    
+* 黑科技之Store
  
    Redux的三大原则之一的第一个原则说的就是:单一数据源原则,整个应用的数据状态将被Redux的一个Store维护着。Store主要有以下功能:
    * 管理着整个应用的状态

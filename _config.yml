@@ -92,6 +92,7 @@ deploy:
   type: git
   repository:
       coding: git@git.coding.net:weekly/weekly.coding.me.git
+      github: git@github.com:xdimh/xdimh.github.io.git
   branch: master
 
 
