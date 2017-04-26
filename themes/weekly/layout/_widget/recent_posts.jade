@@ -1,0 +1,5 @@
+.widget
+  .widget-title
+    span(class='icon icon-article')
+    span(class='widget-txt')= __('recent')
+  != list_posts({amount: 10})
