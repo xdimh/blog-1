@@ -52,6 +52,7 @@ description:
        }
     }
    ``` 
+   
 * 黑科技之Reducer
 
    前面的action定义并描述了发生的事件,但是并没有指定对应的处理方法,那么这里的Reducer就是用来处理action所描述的事件的函数。该函数接受两个参数,分别是previous state 和 action。然后返回新的state。之所以称为Reducer,主要是因为这个函数的行为和数组原型中的reduce方法很像,``Array.prototype.reduce()``。在应用最开始的时候,Redux在没有初始state的时候,就会给state赋值undefined,为了避免这种情况,所以在Reducer的时候应该设置一个初始化状态。如下:

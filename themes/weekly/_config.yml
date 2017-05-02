@@ -10,6 +10,7 @@ tinysou: ## Your tinysou_key, e.g. 4ac092ad8d749fdc6293
 self_search: true
 google_analytics: ## Your Google Analytics tracking id, e.g. UA-42425684-2
 baidu_analytics: 4c66f02c419b1b8b035290646cd20eaf
+baidu_push: true
 show_category_count: true # 是否显示分类文章总数
 toc_number: true ## If you want to add list number to toc please set the value to true.
 shareto: true ## If you want to use the share button please set the value to true.
