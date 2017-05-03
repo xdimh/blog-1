@@ -1,5 +1,6 @@
 ---
 title: JavaScript中的正则表达式之正向环视(正向断言)
+type: original
 tags: [前端大杂烩]
 categories: [前端大杂烩]
 date: 2017-04-26 16:47:21

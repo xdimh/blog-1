@@ -1,5 +1,6 @@
 ---
 title: base64的编码和解码
+type: original
 tags: [前端大杂烩]
 categories: [前端大杂烩]
 date: 2017-04-26 16:16:54

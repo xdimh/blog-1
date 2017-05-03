@@ -1,7 +1,7 @@
 ---
 title: Node Stream 初窥
-tags: [NodeJs]
-categories: [NodeJs]
+tags: [NodeJS]
+categories: [NodeJS,前端大杂烩]
 date: 2017-04-26 11:13:00
 description: Node 将几乎所有 IO 操作都抽象成了 Stream 的操作。Stream 是一个抽象的概念，可以将Stream 想象成水流管道,管道有只用于输出的,有只接收的,有负责中间过渡的(既有输入的一端,也有输出的一端)。总之就是生产东西,或者消费东西,这个东西可以是Buffer,可以是String,甚至是可以Object。
 ---

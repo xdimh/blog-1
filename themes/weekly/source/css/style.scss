@@ -305,6 +305,23 @@ div {
 
 .post {
     padding: 25px 0 15px;
+    position: relative;
+    .watermark {
+        position: absolute;
+        top:0;
+        right:0;
+        width:9em;
+        height:9em;
+        background: url("http://rainypin.qiniudn.com/blog/images/yc.png") 0 0 no-repeat;
+        -webkit-background-size:contain;
+        background-size:contain;
+        &.translate {
+            background-image: url("http://rainypin.qiniudn.com/blog/images/fy.png");
+        }
+        &.recommend {
+            background-image: url("http://rainypin.qiniudn.com/blog/images/tj.png");
+        }
+    }
     .post-title {
         margin: 0;
         color: #555;

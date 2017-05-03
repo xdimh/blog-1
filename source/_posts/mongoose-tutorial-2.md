@@ -1,5 +1,6 @@
 ---
 title: Mongoose 学习笔记二 — Query & Population
+type: original
 description: >-
   数据库操作中查询肯定少不了,Documents 可以通过models的一些静态辅助方法来获取,这些方法可以以两种方式执行。1. 当 callback
   回调函数作为参数传递给这些静态辅助函数的时候,相应的操作会立即执行,并将结果传递给 callback 回调函数。
@@ -7,7 +8,6 @@ tags: [Mongoose,Mongodb]
 categories: [cnodejs源码学习]
 date: 2017-04-27 00:06:04
 ---
-
 
 ### Query
 

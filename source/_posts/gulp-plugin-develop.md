@@ -1,5 +1,6 @@
 ---
 title: gulp 插件开发
+type: original
 tags: [前端大杂烩]
 categories: [前端大杂烩]
 date: 2017-04-26 16:15:31

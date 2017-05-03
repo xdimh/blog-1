@@ -1,5 +1,6 @@
 ---
 title: 用JavaScript来写客户端 — React Native
+type: original
 tags: ['React Native']
 categories: ['React Native']
 date: 2017-04-26 15:46:34

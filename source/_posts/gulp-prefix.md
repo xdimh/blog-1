@@ -1,5 +1,6 @@
 ---
 title: gulp-prefix插件源码阅读
+type: original
 tags: [前端大杂烩]
 categories: [前端大杂烩]
 date: 2017-04-26 16:08:56
