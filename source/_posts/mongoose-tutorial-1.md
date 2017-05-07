@@ -2,7 +2,7 @@
 title: Mongoose 学习笔记一
 type: original
 tags: [Mongoose,Mongodb]
-categories: [cnodejs源码学习]
+categories: [nodeclub源码学习]
 date: 2017-04-26 00:50:12
 description:
 ---

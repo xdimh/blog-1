@@ -2,7 +2,7 @@
 title: 什么是JavaScript 事件循环 ?
 type: translate
 tags: [JavaScript]
-categories: [cnodejs源码学习]
+categories: [nodeclub源码学习]
 date: 2017-05-03 11:33:10
 description:
 ---
