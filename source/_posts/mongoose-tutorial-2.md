@@ -1,5 +1,5 @@
 ---
-title: Mongoose 学习笔记二 — Query & Population
+title: Mongoose 学习笔记二 — Query 和 Population
 type: original
 description: >-
   数据库操作中查询肯定少不了,Documents 可以通过models的一些静态辅助方法来获取,这些方法可以以两种方式执行。1. 当 callback

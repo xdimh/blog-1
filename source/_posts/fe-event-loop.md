@@ -1,5 +1,5 @@
 ---
-title: JavaScript & NodeJS 事件循环
+title: JavaScript 和 NodeJS 事件循环
 type: original
 tags: [NodeJS,JavaScript]
 categories: [nodeclub源码学习]

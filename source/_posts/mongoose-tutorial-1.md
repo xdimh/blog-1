@@ -1,5 +1,5 @@
 ---
-title: Mongoose 学习笔记一
+title: Mongoose 学习笔记一 Model 和 Schema
 type: original
 tags: [Mongoose,Mongodb]
 categories: [nodeclub源码学习]
