@@ -2,7 +2,7 @@
 title: JavaScript 和 NodeJS 事件循环
 type: original
 tags: [NodeJS,JavaScript]
-categories: [nodeclub源码学习]
+categories: [NodeJS,nodeclub源码学习]
 date: 2017-05-05 11:20:12
 description:
 ---

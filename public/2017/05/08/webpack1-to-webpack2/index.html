@@ -1,0 +1,163 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="keywords" content="前端周记,前端开发,前端分享,前端实践,FE,Front End,React,React Native,NodeJS,Vue,Electron"><meta name="description" content="前端周记,前端分享,前端实践,前端技术文章翻译,项目总结,知识点记录,心得体会分享,新技术调研。好记性不如烂笔头,记录自己做项目过程中的一些心得体会,遇到过并填过的坑以及自平时己学习的新知识,摸过的鱼。"><meta name="baidu-site-verification" content="gC9bUYul0P"><title>升级项目中的 webpack1.x 到 webpack2.x , 完善项目构建打包 | ~Refresh的前端周记</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=1.0.1"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/6.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/0.6.2/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/0.6.2/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">升级项目中的 webpack1.x 到 webpack2.x , 完善项目构建打包</h1><a id="logo" href="/.">~Refresh的前端周记</a><p class="description">一条道走到黑</p></div><div id="nav-menu"><a href="/." class="current"><span class="icon icon-home"></span><span class="menu-txt">首页</span></a><a href="/archives/"><span class="icon icon-archive"></span><span class="menu-txt">归档</span></a><a href="/about/"><span class="icon icon-about"></span><span class="menu-txt">关于</span></a></div></div><div id="layout" class="pure-g"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><div class="watermark original"></div><h1 class="post-title">升级项目中的 webpack1.x 到 webpack2.x , 完善项目构建打包</h1><div class="post-meta">May 8, 2017<span> | </span><span class="category"><a href="/categories/构建工具/">构建工具</a><a href="/categories/构建工具/前端大杂烩/">前端大杂烩</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> Hits</span></span></div><div class="post-content"><h2 id="webpack-中模块解析"><a href="#webpack-中模块解析" class="headerlink" title="webpack 中模块解析"></a>webpack 中模块解析</h2><p>在webpack中,webpack解析如下三种类型的文件路径:</p>
+<ul>
+<li><p>绝对路径</p>
+  <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> <span class="string">"/home/me/file"</span>;</div><div class="line"><span class="keyword">import</span> <span class="string">"C:\\Users\\me\\file"</span>;</div></pre></td></tr></table></figure>
+<p>  这种情况因为已经是绝对路径,webpack只需要去对应的路径加载解析模块即可,无需额外的路径解析。</p>
+</li>
+<li><p>相对路径</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> <span class="string">"../src/file1"</span>;</div><div class="line"><span class="keyword">import</span> <span class="string">"./file2"</span>;</div></pre></td></tr></table></figure>
+<p>当前文件所在的目录为相对路径的上下文目录,通过join 当前文件所在目录和 import 或者 require 指定的目录来获得模块的绝对路径,从而可以正确加载和解析引入的模块。</p>
+</li>
+<li><p>模块路径</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> <span class="string">"module"</span>;</div><div class="line"><span class="keyword">import</span> <span class="string">"module/lib/file"</span>;</div></pre></td></tr></table></figure>
+<p>如果是模块路径的话,webpack会在 <code>resolve.modules</code> 指定的目录中搜索,同时会查看 <code>resolve.alias</code>的别名设置,如果设置了对应的别名还会进行相应的别名替换,具体详细的替换规则参看官方文档<a href="https://webpack.js.org/configuration/resolve/#resolve-alias" target="_blank" rel="external">resolve alias</a>。当然这种模块引入方式,最后会去<code>node_modules</code>中搜索对应的模块。 </p>
+<p>一旦根据上面的规则得到了模块的路径,webpack 模块解析器会根据下面两种情况进行相应的模块加载:</p>
+<ol>
+<li><p>如果模块路径指向文件</p>
+<ul>
+<li><p>如果路径包含文件扩展名,那么直接打包指定的模块内容。</p>
+</li>
+<li><p>如果文件扩展名未指定,则会去查看 <code>resolve.extension</code> 的配置,解析器会尝试去寻找文件的扩展名为<code>resolve.extension</code>指定值的模块文件。<strong>注意:如果你不想配置可选扩展名,那么可以通过设置<code>resolve.enforceExtension</code>为 true 强制提供文件扩展名</strong></p>
+</li>
+</ul>
+</li>
+<li><p>如果模块路径指向一个目录</p>
+<ul>
+<li><p>如果该目录底下存在 package.json 文件,然后会查看 <code>resolve.mainFields</code> 的配置,按照配置的字段顺序,去package.json 文件中找,找到哪个就是哪个,具体参看官方文档<a href="https://webpack.js.org/configuration/resolve/#resolve-mainfields" target="_blank" rel="external">resolve.mainFields</a>。</p>
+</li>
+<li><p>如果不存在 package.json 文件,或者是 <code>resolve.mainFields</code> 指定的文件路径不正确,解析器则会依次去搜索 <code>resolve.mainFiles</code> 指定的文件名称,按顺序找到哪个算哪个。默认值为<code>mainFiles: [&quot;index&quot;]</code></p>
+</li>
+<li><p>文件扩展名和前面一样,使用<code>resolve.extensions</code>选项。</p>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h2 id="webpack1-x-到-webpack2-x-变化的地方"><a href="#webpack1-x-到-webpack2-x-变化的地方" class="headerlink" title="webpack1.x 到 webpack2.x 变化的地方"></a>webpack1.x 到 webpack2.x 变化的地方</h2><ul>
+<li><p>resolve.root, resolve.fallback, resolve.modulesDirectories 被一个单独的选项 resolve.modules 取代。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">    </div><div class="line">resolve: &#123;</div><div class="line">-    extensions: [<span class="string">''</span>, <span class="string">'.js'</span>, <span class="string">'.jsx'</span>, <span class="string">'.scss'</span>],</div><div class="line">-    alias: &#123;&#125;,</div><div class="line">-    root: [</div><div class="line">+    extensions: [<span class="string">'.js'</span>, <span class="string">'.jsx'</span>, <span class="string">'.scss'</span>],</div><div class="line">+    alias: &#123;</div><div class="line">+      echarts$ : path.resolve(__dirname, <span class="string">'../src/base/echarts-3.5.4.js'</span>)</div><div class="line">+    &#125;,</div><div class="line">+    modules: [</div><div class="line">       path.resolve(<span class="string">'src'</span>),</div><div class="line">-      path.resolve(<span class="string">'src/components'</span>)</div><div class="line">+      path.resolve(<span class="string">'src/components'</span>),</div><div class="line">+      <span class="string">'node_modules'</span></div><div class="line">     ]</div><div class="line">-  &#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<ul>
+<li><p>module.loaders 改为 module.rules</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">  <span class="built_in">module</span>: &#123;</div><div class="line">-   loaders: [</div><div class="line">+   rules: [</div><div class="line">      &#123;</div><div class="line">        <span class="attr">test</span>: <span class="regexp">/\.css$/</span>,</div><div class="line">-       loaders: [</div><div class="line">-         <span class="string">"style-loader"</span>,</div><div class="line">-         <span class="string">"css-loader?modules=true"</span></div><div class="line">+       use: [</div><div class="line">+         &#123;</div><div class="line">+           loader: <span class="string">"style-loader"</span></div><div class="line">+         &#125;,</div><div class="line">+         &#123;</div><div class="line">+           loader: <span class="string">"css-loader"</span>,</div><div class="line">+           options: &#123;</div><div class="line">+             modules: <span class="literal">true</span></div><div class="line">+           &#125;</div><div class="line">+         &#125;</div><div class="line">        ]</div><div class="line">      &#125;]</div><div class="line"> &#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<ul>
+<li><p>取消「在模块名中自动添加 -loader 后缀」</p>
+<p>在引用loader的是候默认不能省略loader后缀,除非按如下方式显示指明:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">+ resolveLoader: &#123;</div><div class="line">+   moduleExtensions: [&quot;-loader&quot;]</div><div class="line">+ &#125;</div></pre></td></tr></table></figure>
+<p>所以像之前的 babel-loader, 都不能写成babel 需要显示写成babel-loader。</p>
+</li>
+<li><p>OccurrenceOrderPlugin</p>
+<p>将短的id分配给使用频率高的模块,webpack2对此插件会默认加载,所以在webpack2 配置文件中不需要加载 <code>OccurrenceOrderPlugin</code>。</p>
+</li>
+<li><p>DedupePlugin </p>
+<p>去除重复模块,减少bundle的大小,但是webapck2 本身的功能就已经支持了,所以不再需要该插件。</p>
+</li>
+<li><p>ExtractTextWebpackPlugin - 破坏性改动</p>
+<p>对于这个插件的使用方式,改动还是很多的:</p>
+<ul>
+<li><p>ExtractTextPlugin.extract</p>
+<p>  对于loader中,webpack2 你需要这么写:</p>
+  <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">module</span>: &#123;</div><div class="line">  <span class="attr">rules</span>: [</div><div class="line">    &#123;</div><div class="line">      <span class="attr">test</span>: <span class="regexp">/.css$/</span>,</div><div class="line">-      loader: ExtractTextPlugin.extract(<span class="string">"style-loader"</span>, <span class="string">"css-loader"</span>, &#123; <span class="attr">publicPath</span>: <span class="string">"/dist"</span> &#125;)</div><div class="line">+      use: ExtractTextPlugin.extract(&#123;</div><div class="line">+        fallback: <span class="string">"style-loader"</span>, <span class="comment">// 无法提取的样式,最后还是采用内联。</span></div><div class="line">+        use: <span class="string">"css-loader"</span>,</div><div class="line">+        publicPath: <span class="string">"/dist"</span> <span class="comment">// 这里可以不提供,默认会使用output中的publicPath, 如果提供了,会优先使用这里的publicPath 指定的值。</span></div><div class="line">+      &#125;)</div><div class="line">    &#125;</div><div class="line">  ]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>new ExtractTextPlugin({options}) </p>
+<p>在 plugins 中还是需要进行修改,不然打包会出错。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">-  <span class="keyword">new</span> ExtractTextPlugin(<span class="string">"bundle.css"</span>, &#123; <span class="attr">allChunks</span>: <span class="literal">true</span>, <span class="attr">disable</span>: <span class="literal">false</span> &#125;)</div><div class="line">+  <span class="keyword">new</span> ExtractTextPlugin(&#123;</div><div class="line">+    filename: <span class="string">"bundle.css"</span>,</div><div class="line">+    disable: <span class="literal">false</span>,</div><div class="line">+    allChunks: <span class="literal">true</span></div><div class="line">+  &#125;)</div><div class="line">]</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<p> 关于webpack1.x 到 webpack2.x 更多的变化参看官方文档<a href="https://doc.webpack-china.org/guides/migrating/。" target="_blank" rel="external">https://doc.webpack-china.org/guides/migrating/。</a></p>
+<h2 id="代码分割"><a href="#代码分割" class="headerlink" title="代码分割"></a>代码分割</h2><p> 最初搭建项目前端架构的时候,没有特别信任webpack的代码分割功能,总觉得webpack不能很好的识别代码中引入的第三方库,并成功提取出来,合并成一个文件。所以对像 <code>react</code>, <code>react-dom</code>, <code>react-redux</code>, <code>redux</code>,<code>zepto</code>,<code>echarts</code>第三方库,都采用UMD(页面标签)引入方式,通过在webpack中配置externals 实现在代码中通过ES6 import 方式进行引入,所以 externals 也是挺乱的:</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">-  externals: &#123;</div><div class="line">-    &apos;Zepto&apos;: &apos;$&apos;,</div><div class="line">-    &apos;react&apos;: &apos;React&apos;,</div><div class="line">-    &apos;React&apos;: &apos;React&apos;,</div><div class="line">-    &apos;ReactDOM&apos;: &apos;ReactDOM&apos;,</div><div class="line">-    &apos;react-dom&apos;: &apos;ReactDOM&apos;,</div><div class="line">-    &apos;react/lib/ReactDOM&apos;: &apos;ReactDOM&apos;,</div><div class="line">-    &apos;react/lib/ReactComponentWithPureRenderMixin&apos;: &apos;React.addons.PureRenderMixin&apos;,</div><div class="line">-    &apos;ReactRouter&apos;: &apos;ReactRouter&apos;,</div><div class="line">-    &apos;Redux&apos;: &apos;Redux&apos;,</div><div class="line">-    &apos;ReactRedux&apos;: &apos;ReactRedux&apos;,</div><div class="line">-    &apos;echarts&apos;: &apos;echarts&apos;</div><div class="line">   &#125;</div></pre></td></tr></table></figure>
+<p> 但这样会造成一些问题:</p>
+<ol>
+<li><p>最后在项目打包发布的时候,第三方库需要自己通过gulp写合并压缩命名的构建任务,导致构建任务复杂化。</p>
+</li>
+<li><p>通过UMD方式引入第三方库,需要人为维护第三方库的版本更新,容易造成团队中成员使用的第三方库版本不一致。</p>
+</li>
+</ol>
+<p>所以基于上面的问题,决定通过这次webpack1.x 到 webpack2.x 的升级顺带将第三方库采用CMD方式引入,具体提取抽离交由 webpack 代码分割特性进行处理。webpack 可以完成两类代码分割任务:</p>
+<h4 id="1-分割资源，实现缓存资源和并行加载资源。"><a href="#1-分割资源，实现缓存资源和并行加载资源。" class="headerlink" title="1. 分割资源，实现缓存资源和并行加载资源。"></a>1. 分割资源，实现缓存资源和并行加载资源。</h4><ul>
+<li><p>分割第三方库(vendor)</p>
+<p>一个典型的应用程序，会依赖于许多提供框架/功能需求的第三方库代码。不同于应用程序代码，这些第三方库代码不会频繁修改。如果我们将这些库(library)中的代码，保留在与应用程序代码相独立的 bundle 中，我们就可以利用浏览器缓存机制，把这些文件长时间地缓存在用户机器上。</p>
+<p>webpack 提供了 CommonsChunkPlugin 插件,用于完成第三方JS库的代码分割,具体如下:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 在 entry 中指定要抽离的第三方 JS 库。</span></div><div class="line">entry: &#123;</div><div class="line">  <span class="string">"vendor"</span>: [<span class="string">'react'</span>,<span class="string">'react-dom'</span>,<span class="string">'react-router'</span>,<span class="string">'redux'</span>,<span class="string">'react-redux'</span>,<span class="string">'n-zepto'</span>,<span class="string">'echarts'</span>,<span class="string">'moment'</span>],</div><div class="line">  <span class="string">"bundle"</span>: path.resolve(<span class="string">'src/'</span>) + <span class="string">'/index.js'</span></div><div class="line">&#125;</div><div class="line"> </div><div class="line"><span class="comment">// 在 plugins 中添加 CommonsChunkPlugin 插件,并指定提取出来第三方库文件的名称。</span></div><div class="line">plugins : [</div><div class="line">  <span class="keyword">new</span> webpack.optimize.CommonsChunkPlugin(&#123;</div><div class="line">        <span class="attr">name</span>: <span class="string">"vendor"</span> <span class="comment">// 和 entry 中指定的名称对应</span></div><div class="line">  &#125;)</div><div class="line">]</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<ul>
+<li><p>分离 CSS </p>
+<p>在代码中,引入的样式资源,我们可以将样式代码分离到单独的 bundle 中，与应用程序的逻辑分离。 这加强了样式的可缓存性，并且使得浏览器能够并行加载应用程序代码中的样式文件，避免无样式内容造成的闪烁问题。通过 webpack 的 ExtractTextWebpackPlugin 完成样式的提取。具体的用法参看前面的 <strong>ExtractTextWebpackPlugin - 破坏性改动</strong>。</p>
+</li>
+</ul>
+<h4 id="2-按需加载"><a href="#2-按需加载" class="headerlink" title="2. 按需加载"></a>2. 按需加载</h4><p>对于一个项目,像单页应用,展示首页时往往不需要将所有资源都加载到浏览器端,这样的好处就是能够是减少首屏渲染时间,所以 webpack 提供了相应的方法,让你指定代码分割点,可以实现对应的代码按需加载。这里我们通过 <code>require.ensure(dependencies: String[], callback: function(require), errorCallback: function(error), chunkName: String)</code> 来定义分割点。</p>
+<ul>
+<li><p>dependencies </p>
+<p>定义callback执行依赖的模块。</p>
+</li>
+<li><p>callback </p>
+<p>当所有dependencies定义的依赖加载完后,callback 就会被执行,require 作为参数传入,在callback中 require 引入的模块都会被合并成一个chunk, 然后在程序用到的时候,动态加载。</p>
+</li>
+<li><p>errorCallback </p>
+<p>依赖加载失败回调</p>
+</li>
+<li><p>chunkName</p>
+<p>合并后的按需加载块的名称,如果这里不指定,默认会按照output中定义的 filename 定义的名称格式来,其中的 <code>[name]</code> 被块 <code>[id]</code> 替换。所以得到的文件名称如下图:</p>
+<p><img src="http://rainypin.qiniudn.com/blog/images/chunk-name.png" alt="id加chunkhash:8加version"></p>
+<p>指定名称后:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="attr">path</span>: <span class="string">'/home/order-detail'</span>, <span class="comment">// 订单分析 -&gt; 订单明细</span></div><div class="line">  onEnter: routeAuths.onSubRouteEnter.bind(routeAuths),</div><div class="line">  <span class="attr">getComponents</span>: <span class="function">(<span class="params">nextState, callback</span>) =&gt;</span> &#123;</div><div class="line">    <span class="built_in">require</span>.ensure([], <span class="function"><span class="keyword">function</span>(<span class="params">require</span>) </span>&#123;</div><div class="line">      callback(<span class="literal">null</span>, <span class="built_in">require</span>(<span class="string">'./pages/dashboard/order-detail'</span>))</div><div class="line">    &#125;,<span class="string">'order-detail'</span>)</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>  <img src="http://rainypin.qiniudn.com/blog/images/chunk-name-2.png" alt="chunkname加chunkhash:8加version"></p>
+<h2 id="npm-prune-后通过-npm-shrinkwrap-锁定依赖包版本"><a href="#npm-prune-后通过-npm-shrinkwrap-锁定依赖包版本" class="headerlink" title="npm prune 后通过 npm shrinkwrap 锁定依赖包版本"></a>npm prune 后通过 npm shrinkwrap 锁定依赖包版本</h2><p>在维护老项目的时候,经常会遇到因为包版本的升级,导致项目打包失败的问题,或者也遇到过,在你电脑上运行没问题的代码,然后在同事电脑上安装完依赖包却报错。因为 npm 包管理工具在安装一个包后,在package.json中记录的版本是一个范围,如下:</p>
+<p><img src="http://rainypin.qiniudn.com/blog/images/pkg.png" alt="package,json"></p>
+<p>如上面的 react-router 指定的是2.8.1以上的版本,然后现在可以用的版本已经是 3.x 了,并且有不少的改动,如果别的同事直接 <code>npm install</code> 安装的 react-router 可能就是最新版本,所以可能就会导致程序运行出错,所以我们可以通过<code>npm shrinkwrap</code>命令,生成当前正在使用的包版本信息文件npm-shrinkwrap.json,然后提交到代码仓库,其他同事通过 <code>npm install</code> 依赖包的时候,会先读取 npm-shrinkwrap.json 版本信息,然后进行安装,这样就能保证每个人电脑上依赖包版本的一致,也使得后面代码的维护更加简单。更多内容可以参考 <a href="https://docs.npmjs.com/cli/shrinkwrap" target="_blank" rel="external">npm shrinkwrap 官方说明</a>。</p>
+<p><strong>注:如果执行npm shrinkwrap 命令失败,可能是因为你直接安装了一些依赖包,但并没有记录在package.json文件中导致的,可以通过npm prune移除这些未记录在package.json的包后,再通过npm shrinkwrap 尝试生成版本信息文件。</strong></p>
+<h2 id="完善项目构建打包"><a href="#完善项目构建打包" class="headerlink" title="完善项目构建打包"></a>完善项目构建打包</h2><p>由于之前项目打包构建针对不同情况的配置直接写在打包任务中,导致构建任务变得复杂,不够清晰,也不便于和后端联调,所以这次对其做了一些调整,前端代码其实主要会根据三种情况进行不同的打包,分别是本地调试,接近发布状态的调试,发布打包,所以针对三种情况分离出特有的配置内容和公共的配置内容如下:</p>
+<p><img src="http://rainypin.qiniudn.com/blog/images/webpack.png" alt="三种情况打包配置"></p>
+<p>三种情况特有配置分别对应文件:local.js , beta.js , release.js。除了特有的配置,文件中还包含了每种情况环境常量,如打包后文件存放路径,publicPath 等。</p>
+<p><img src="http://rainypin.qiniudn.com/blog/images/package.png" alt="打包构建目录结构"></p>
+<p>local.js, beta.js, release.js 配置内容结构大致如下:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="meta">"use strict"</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>),</div><div class="line">      path = <span class="built_in">require</span>(<span class="string">'path'</span>),</div><div class="line">      util = <span class="built_in">require</span>(<span class="string">'../lib/util.js'</span>);</div><div class="line"></div><div class="line"><span class="keyword">let</span> constants = &#123;</div><div class="line">    <span class="comment">// 不同情况环境常量</span></div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">let</span> webpackConfig = &#123;</div><div class="line">    <span class="comment">// 特有webpack打包配置</span></div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="built_in">module</span>.exports = &#123;</div><div class="line">  constants,</div><div class="line">  <span class="attr">webpack</span> : webpackConfig</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>最后在 package.json 加入针对不同情况的打包命令:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="string">"scripts"</span>: &#123;</div><div class="line">    <span class="string">"local"</span>: <span class="string">"gulp build -h"</span>, <span class="comment">// 针对本地开发自测打包,同时开启mock服务,相当于gulp build -l -h</span></div><div class="line">    <span class="string">"beta"</span>: <span class="string">"gulp build -b"</span>, <span class="comment">// 预发布状态打包测试,会打出sourcemap,便于调试定位问题。</span></div><div class="line">    <span class="string">"release"</span>: <span class="string">"gulp build -r"</span> <span class="comment">// 发布打包,会将打完包的文件发布到cdn上</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><ol>
+<li><a href="https://doc.webpack-china.org/" target="_blank" rel="external">webpack docs</a> </li>
+<li><a href="https://docs.npmjs.com/cli/shrinkwrap" target="_blank" rel="external">npm shrinkwrap</a></li>
+</ol>
+</div><script type="text/javascript" src="/js/share.js?v=1.0.1" async></script><a data-url="http://weeklyweb.info/2017/05/08/webpack1-to-webpack2/" data-id="cj5c9pqoi001cqfflxp1cskjy" class="article-share-link">分享到</a><div class="tags"><a href="/tags/webpack/"><span class="icon icon-clip"></span><span class="name">webpack</span></a></div><div class="post-nav"><a href="/2017/06/24/git-and-npm/" class="pre">git 和 npm 常用命令汇总</a><a href="/2017/05/06/event-proxy/" class="next">eventproxy 源码解析</a></div><div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div><script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script><script>var cloudTieConfig = {
+  url: document.location.href,
+  sourceId: "",
+  productKey: "151c661ff0ff41c18669a374d3f8f153",
+  target: "cloud-tie-wrapper"
+};
+var yunManualLoad = true;
+Tie.loader("aHR0cHM6Ly9hcGkuZ2VudGllLjE2My5jb20vcGMvbGl2ZXNjcmlwdC5odG1s", true);</script></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="搜索" type="text" name="q" results="0" autocomplete="off"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><span class="icon icon-category"></span><span class="widget-txt">分类</span></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/NodeJS/">NodeJS</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/NodeJS/nodeclub源码学习/">nodeclub源码学习</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/NodeJS/前端大杂烩/">前端大杂烩</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/React/">React</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/React-Native/">React Native</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/nodeclub源码学习/">nodeclub源码学习</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端大杂烩/">前端大杂烩</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/构建工具/">构建工具</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/构建工具/前端大杂烩/">前端大杂烩</a><span class="category-list-count">1</span></li></ul></li></ul></div><div class="widget"><div class="widget-title"><span class="icon icon-clip"></span><span class="widget-txt">标签</span></div><div class="tagcloud"><a href="/tags/前端大杂烩/" style="font-size: 15px;">前端大杂烩</a> <a href="/tags/JavaScript/" style="font-size: 15px;">JavaScript</a> <a href="/tags/NodeJS/" style="font-size: 15px;">NodeJS</a> <a href="/tags/Mongoose/" style="font-size: 15px;">Mongoose</a> <a href="/tags/Mongodb/" style="font-size: 15px;">Mongodb</a> <a href="/tags/React/" style="font-size: 15px;">React</a> <a href="/tags/React-Native/" style="font-size: 15px;">React Native</a> <a href="/tags/webpack/" style="font-size: 15px;">webpack</a> <a href="/tags/git/" style="font-size: 15px;">git</a> <a href="/tags/npm/" style="font-size: 15px;">npm</a></div></div><div class="widget"><div class="widget-title"><span class="icon icon-article"></span><span class="widget-txt">最新文章</span></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2017/06/24/git-and-npm/">git 和 npm 常用命令汇总</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/08/webpack1-to-webpack2/">升级项目中的 webpack1.x 到 webpack2.x , 完善项目构建打包</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/06/event-proxy/">eventproxy 源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/05/fe-event-loop/">JavaScript 和 NodeJS 事件循环</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/03/javascript-event-loop/">什么是JavaScript 事件循环 ?</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/27/mongoose-tutorial-2/">Mongoose 学习笔记二 — Query 和 Population</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/26/react-life-cycle/">React 的生命周期</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/26/ngrok/">使用ngrok让你的本地mock可以提供给外网访问</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/26/redux-introduction/">Redux 简介</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/26/regular-expression/">JavaScript中的正则表达式之正向环视(正向断言)</a></li></ul></div><div class="widget"><div class="widget-title"><span class="icon icon-link"></span><span class="widget-txt">友情链接</span></div><ul></ul><a href="http://fex.baidu.com/" title="百度FEX" target="_blank">百度FEX</a><ul></ul><a href="http://www.aliued.com/" title="阿里巴巴UED" target="_blank">阿里巴巴UED</a><ul></ul><a href="http://f2e.souche.com/blog/" title="搜车大无线团队博客" target="_blank">搜车大无线团队博客</a><ul></ul><a href="http://fe.meituan.com/" title="美团前端团队博客" target="_blank">美团前端团队博客</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">© <a>2017 </a><a href="/." rel="nofollow">~Refresh的前端周记</a></div></div></div><a id="rocket" href="#top" class="show"></a><script type="text/javascript" src="/js/totop.js?v=1.0.1" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.0.47/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=1.0.1" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.0.47/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=1.0.1"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?4c66f02c419b1b8b035290646cd20eaf";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+  })();
+</script><script>(function () {
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=1.0.1"></script><script type="text/javascript" src="/js/smartresize.js?v=1.0.1"></script></div></body></html>

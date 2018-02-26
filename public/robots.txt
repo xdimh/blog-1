@@ -1,0 +1,5 @@
+# robots.txt generated at http://tool.chinaz.com/robots/
+User-agent: *
+Disallow: /css/
+Disallow: /js/
+Sitemap: http://weeklyweb.info/sitemap.xml

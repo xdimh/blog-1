@@ -1,0 +1,340 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="keywords" content="前端周记,前端开发,前端分享,前端实践,FE,Front End,React,React Native,NodeJS,Vue,Electron"><meta name="description" content="前端周记,前端分享,前端实践,前端技术文章翻译,项目总结,知识点记录,心得体会分享,新技术调研。好记性不如烂笔头,记录自己做项目过程中的一些心得体会,遇到过并填过的坑以及自平时己学习的新知识,摸过的鱼。"><meta name="baidu-site-verification" content="gC9bUYul0P"><title>base64的编码和解码 | ~Refresh的前端周记</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=1.0.1"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/6.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/0.6.2/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/0.6.2/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">base64的编码和解码</h1><a id="logo" href="/.">~Refresh的前端周记</a><p class="description">一条道走到黑</p></div><div id="nav-menu"><a href="/." class="current"><span class="icon icon-home"></span><span class="menu-txt">首页</span></a><a href="/archives/"><span class="icon icon-archive"></span><span class="menu-txt">归档</span></a><a href="/about/"><span class="icon icon-about"></span><span class="menu-txt">关于</span></a></div></div><div id="layout" class="pure-g"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><div class="watermark original"></div><h1 class="post-title">base64的编码和解码</h1><div class="post-meta">Apr 26, 2017<span> | </span><span class="category"><a href="/categories/前端大杂烩/">前端大杂烩</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> Hits</span></span></div><div class="post-content"><p>base64编码在各种编码中应该算是比较简单的一种了,在前端中很多地方有被应用到,小图片base64后内联,与客户端交互的jsBridge中数据的base64编码传输,小程序中字体图标base64后内联等等。这次在项目中用到了base64的编码和解码,网上搜了一把有很多base64操作的js实现,之前一直对base64编码半知半解,看着代码中的各种位操作也是云里雾里,所以借这次项目机会稍微深入的了解了下base64这个东西。</p>
+<h3 id="什么是base64编码"><a href="#什么是base64编码" class="headerlink" title="什么是base64编码?"></a>什么是base64编码?</h3><p>对于base64 我们首先需要先看下ASCII编码,想必大家都知道在计算机内部所有的信息数据都表现为二进制的形式,就是那些0101数字串,每一个二进制位(bit)有0和1两种状态，因此八个二进制位就可以组合出256种状态，这被称为一个字节(byte)。也就是说，一个字节一共可以用来表示256种不同的状态，每一个状态对应一个符号，就是256个符号，从0000000到1111111。ASCII码就是用后7位二进制表示了128个字符,这对英语来说是够用了,所需要的字母都能在这后7位中表现出来。那么base64编码的规则又是什么,base64就是选出64个字符作为一个基本的字符集,然后在将其他文字符号都转换成这个字符集中的字符以予表示。这64个字符分别是<code>a-z</code>,<code>A-Z</code> ,<code>0-9</code>,符号<code>+</code>、<code>-</code>,除了前面几位还有<code>=</code>占位符,不属于所表示的内容。</p>
+<h3 id="字符base64编码的几个步骤"><a href="#字符base64编码的几个步骤" class="headerlink" title="字符base64编码的几个步骤"></a>字符base64编码的几个步骤</h3><blockquote>
+<ol>
+<li>将待转换的字符串用二进制的形式表示出来。<br></li>
+<li>然后每三个字节一组,也就是24个二进制位分成一组。</li>
+<li>再将这24个二进制位分成6组,每四个一组,每组6位二进制位。</li>
+<li>在每一组最前面添加两个00补全成八位,使得24位变成32位刚好凑成4个字节。</li>
+<li>然后计算每个字节所表示的数值(10进制),根据下表查表拼装转换后的字符形成最后base64字符。</li>
+</ol>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">数值</th>
+<th style="text-align:center">符号</th>
+<th style="text-align:center">数值</th>
+<th style="text-align:center">符号</th>
+<th style="text-align:center">数值</th>
+<th style="text-align:center">符号</th>
+<th style="text-align:center">数值</th>
+<th style="text-align:center">符号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">0</td>
+<td style="text-align:center">A</td>
+<td style="text-align:center">17</td>
+<td style="text-align:center">R</td>
+<td style="text-align:center">34</td>
+<td style="text-align:center">i</td>
+<td style="text-align:center">51</td>
+<td style="text-align:center">z</td>
+</tr>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">B</td>
+<td style="text-align:center">18</td>
+<td style="text-align:center">S</td>
+<td style="text-align:center">35</td>
+<td style="text-align:center">j</td>
+<td style="text-align:center">52</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">C</td>
+<td style="text-align:center">18</td>
+<td style="text-align:center">T</td>
+<td style="text-align:center">36</td>
+<td style="text-align:center">k</td>
+<td style="text-align:center">53</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">D</td>
+<td style="text-align:center">20</td>
+<td style="text-align:center">U</td>
+<td style="text-align:center">37</td>
+<td style="text-align:center">l</td>
+<td style="text-align:center">54</td>
+<td style="text-align:center">2</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">E</td>
+<td style="text-align:center">21</td>
+<td style="text-align:center">V</td>
+<td style="text-align:center">38</td>
+<td style="text-align:center">m</td>
+<td style="text-align:center">55</td>
+<td style="text-align:center">3</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">F</td>
+<td style="text-align:center">22</td>
+<td style="text-align:center">W</td>
+<td style="text-align:center">39</td>
+<td style="text-align:center">n</td>
+<td style="text-align:center">56</td>
+<td style="text-align:center">4</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">G</td>
+<td style="text-align:center">23</td>
+<td style="text-align:center">X</td>
+<td style="text-align:center">40</td>
+<td style="text-align:center">o</td>
+<td style="text-align:center">57</td>
+<td style="text-align:center">5</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">H</td>
+<td style="text-align:center">24</td>
+<td style="text-align:center">Y</td>
+<td style="text-align:center">41</td>
+<td style="text-align:center">p</td>
+<td style="text-align:center">58</td>
+<td style="text-align:center">6</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">25</td>
+<td style="text-align:center">Z</td>
+<td style="text-align:center">42</td>
+<td style="text-align:center">q</td>
+<td style="text-align:center">59</td>
+<td style="text-align:center">7</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">J</td>
+<td style="text-align:center">26</td>
+<td style="text-align:center">a</td>
+<td style="text-align:center">43</td>
+<td style="text-align:center">r</td>
+<td style="text-align:center">60</td>
+<td style="text-align:center">8</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">K</td>
+<td style="text-align:center">27</td>
+<td style="text-align:center">b</td>
+<td style="text-align:center">44</td>
+<td style="text-align:center">s</td>
+<td style="text-align:center">61</td>
+<td style="text-align:center">9</td>
+</tr>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">L</td>
+<td style="text-align:center">28</td>
+<td style="text-align:center">c</td>
+<td style="text-align:center">45</td>
+<td style="text-align:center">t</td>
+<td style="text-align:center">62</td>
+<td style="text-align:center">+</td>
+</tr>
+<tr>
+<td style="text-align:center">12</td>
+<td style="text-align:center">M</td>
+<td style="text-align:center">29</td>
+<td style="text-align:center">d</td>
+<td style="text-align:center">46</td>
+<td style="text-align:center">u</td>
+<td style="text-align:center">63</td>
+<td style="text-align:center">/</td>
+</tr>
+<tr>
+<td style="text-align:center">13</td>
+<td style="text-align:center">N</td>
+<td style="text-align:center">30</td>
+<td style="text-align:center">e</td>
+<td style="text-align:center">47</td>
+<td style="text-align:center">v</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td style="text-align:center">14</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">31</td>
+<td style="text-align:center">f</td>
+<td style="text-align:center">48</td>
+<td style="text-align:center">w</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td>　　</td>
+</tr>
+<tr>
+<td style="text-align:center">15</td>
+<td style="text-align:center">P</td>
+<td style="text-align:center">32</td>
+<td style="text-align:center">g</td>
+<td style="text-align:center">49</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td style="text-align:center">16</td>
+<td style="text-align:center">Q</td>
+<td style="text-align:center">33</td>
+<td style="text-align:center">h</td>
+<td style="text-align:center">50</td>
+<td style="text-align:center">y</td>
+<td style="text-align:center"></td>
+</tr>
+</tbody>
+</table>
+<p>在转换的过程中可以发现,并不是所有的带转换字符串最后表示的二进制串所含的字节数都是3的倍数。所以针对这些不到3个字节的情况,会有相应的处理方式。</p>
+<ol>
+<li>最后剩两个字节的情况<blockquote>
+<p>分成三组,前两组最前面加<code>00</code>组成两个字节,后面剩下的4位最前面加两个0,最后面加两个0,组成一个字节,最后补上一个<code>=</code>构成四个字节。</p>
+</blockquote>
+</li>
+<li>最后只剩一个字节的情况<blockquote>
+<p>分成两组,第一组6位最前面添加两位0,后面还剩2位,在最前面添加两个0,然后在最后面添加四个0构成两个字节,补上两个<code>=</code>,构成四个字节。(为什么前面要补两个00,这样计算二进制一个字节所表示的数值才能一一映射到64个字符中)</p>
+</blockquote>
+</li>
+</ol>
+<h3 id="Unicode"><a href="#Unicode" class="headerlink" title="Unicode"></a>Unicode</h3><blockquote>
+<p>Unicode（中文：万国码、国际码、统一码、单一码）是计算机科学领域里的一项业界标准。它对世界上大部分的文字系统进行了整理、编码，使得电脑可以用更为简单的方式来呈现和处理文字。但并没有规定具体在计算机中的存储方式。Unicode的实现方式不同于编码方式。一个字符的Unicode编码是确定的。但是在实际传输过程中，由于不同系统平台的设计不一定一致，以及出于节省空间的目的，对Unicode编码的实现方式有所不同。Unicode的实现方式称为Unicode转换格式（Unicode Transformation Format，简称为UTF）。</p>
+</blockquote>
+<p>UTF-8就是其中的一种实现方式。后面会讲Unicode的编码方式如何转换成UTF-8实现方式的。Unicode有17个code plane,其中0x0000 ~ 0xffff 称为基本多语言平面,0x10000 ~ 0x10ffff 16个为辅助平面。其中基本多语言平面已经涵盖了大部分常用字，如大部分的汉字,所以只需要对这个范围进行处理已经够用。<a href="https://zh.wikipedia.org/wiki/Unicode%E5%AD%97%E7%AC%A6%E5%B9%B3%E9%9D%A2%E6%98%A0%E5%B0%84" target="_blank" rel="external">参考Unicode字符平面映射</a></p>
+<h3 id="UTF-8-和-Unicode之间的转换关系"><a href="#UTF-8-和-Unicode之间的转换关系" class="headerlink" title="UTF-8 和 Unicode之间的转换关系"></a>UTF-8 和 Unicode之间的转换关系</h3><p>首先,UTF-8是一种针对Unicode的可变长度字符编码，也是一种前缀码。它可以用来表示Unicode标准中的任何字符，且其编码中的第一个字节仍与ASCII兼容，这使得原来处理ASCII字符的软件无须或只须做少部分修改，即可继续使用。因此，它逐渐成为电子邮件、网页及其他存储或发送文字的应用中，优先采用的编码,是在互联网上使用最广的一种Unicode的实现方式。特点就是一种变长的编码方式,可以使用1~4个字节表示一个符号，根据不同的符号而变化字节长度。</p>
+<blockquote>
+<ol>
+<li>128个US-ASCII字符只需一个字节编码（Unicode范围由U+0000至U+007F）。</li>
+<li>带有附加符号的拉丁文、希腊文、西里尔字母、亚美尼亚语、希伯来文、阿拉伯文、叙利亚文及它拿字母则需要两个字节编码（Unicode范围由U+0080至U+07FF）。</li>
+<li>其他基本多文种平面（BMP）中的字符（这包含了大部分常用字，如大部分的汉字）使用三个字节编码（Unicode范围由U+0800至U+FFFF）。</li>
+<li>其他极少使用的Unicode 辅助平面的字符使用四字节编码</li>
+</ol>
+</blockquote>
+<p>具体的转换对应关系如下表:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">code point</th>
+<th style="text-align:right">UTF-8字节流</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">U+00000000 – U+0000007F</td>
+<td style="text-align:right">0xxxxxxx</td>
+</tr>
+<tr>
+<td style="text-align:center">U+00000080 – U+000007FF</td>
+<td style="text-align:right">110xxxxx 10xxxxxx</td>
+</tr>
+<tr>
+<td style="text-align:center">U+00000800 – U+0000FFFF</td>
+<td style="text-align:right">1110xxxx 10xxxxxx 10xxxxxx</td>
+</tr>
+<tr>
+<td style="text-align:center">U+00010000 – U+001FFFFF</td>
+<td style="text-align:right">11110xxx 10xxxxxx 10xxxxxx 10xxxxxx</td>
+</tr>
+</tbody>
+</table>
+<p>由上表可见,转换后的字节数由第一个字节二进制串从左到右1的位数决定,<code>0</code>表示一个字节,<code>110</code>表示两个字节,<code>1110</code>对应三个字节,<code>11110</code>四个字节,后续字节都以<code>10</code>开始。根据这个规律我们就可以在代码实现上进行对Unicode和UTF-8之间进行转换。</p>
+<h3 id="JavaScript内部使用的编码方式"><a href="#JavaScript内部使用的编码方式" class="headerlink" title="JavaScript内部使用的编码方式"></a>JavaScript内部使用的编码方式</h3><blockquote>
+<p>JavaScript 引擎内部是自由的使用 UCS-2 或者 UTF-16。大多数引擎使用的是 UTF-16，无论它们使用什么方式实现，它只是一个具体的实现，这不会影响到语言的特性。然后对于 ECMAScript/JavaScript 语言本身，实现的效果是通过 UCS-2，而非 UTF-16。<a href="https://www.w3ctech.com/topic/1869" target="_blank" rel="external">参考:JavaScript 的内部字符编码是 UCS-2 还是 UTF-16</a></p>
+</blockquote>
+<p>所以对于JavaScript,无论是UCS-2还是UTF-16都是一样,采用的是两个字节来存储字符。</p>
+<blockquote>
+<p>ECMAScript source text is represented as a sequence of characters in the Unicode character encoding,version 3.0 or later. … … ECMAScript source text is assumed to be a sequence of 16-bit code units for the purposes of this specification. Such a source text may include sequences of 16-bit code units that are not valid UTF-16 character encodings. If an actual source text is encoded in a form other than 16-bit code units it must be processed as if it was first converted to UTF-16. <a href="http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf" target="_blank" rel="external">参考:ECMA-262 5.1 Edition</a></p>
+</blockquote>
+<p>为了在加密解密中文字符不出现乱码,所以需要在将中文字符编码成<code>base64</code>之前,先将<code>UCS-2/UTF-16</code> 转换成 <code>UTF-8</code> (这里只考虑中文字符是UTF-8的情况),然后再应用<code>base64</code>编码规则进行编码得到最终结果。同样在解码的时候需要按照<code>base64</code>编码规则反向操作转成<code>UTF-8</code>格式,然后再将UTF-8转回成<code>UCS-2/UTF-16</code>。</p>
+<h3 id="UTF-8-和-JavaScript-内部编码互相转换实现。"><a href="#UTF-8-和-JavaScript-内部编码互相转换实现。" class="headerlink" title="UTF-8 和 JavaScript 内部编码互相转换实现。"></a>UTF-8 和 JavaScript 内部编码互相转换实现。</h3><p>首先,了解JavaScript中几个方法<code>String.charCodeAt</code>,<code>String.fromCharCode()</code>,<code>Number.prototype.toString</code>。</p>
+<ul>
+<li><p><a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/String/charCodeAt" target="_blank" rel="external">String.charCodeAt</a></p>
+<blockquote>
+<p>charCodeAt() 方法返回0到65535之间的整数，表示给定索引处的UTF-16代码单元 (在 Unicode 编码单元表示一个单一的 UTF-16 编码单元的情况下，UTF-16 编码单元匹配 Unicode 编码单元。但在——例如 Unicode 编码单元 &gt; 0x10000 的这种——不能被一个 UTF-16 编码单元单独表示的情况下，只能匹配 Unicode 代理对的第一个编码单元) 。如果你想要整个代码点的值，使用 codePointAt()。</p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="string">'中'</span>.charCodeAt(<span class="number">0</span>);</div><div class="line"><span class="number">20013</span></div></pre></td></tr></table></figure>
+</li>
+<li><p><a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/String/fromCharCode" target="_blank" rel="external">String.fromCharCode</a></p>
+<blockquote>
+<p>charCodeAt的反向操作</p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">String</span>.fromCharCode(<span class="number">20013</span>);</div><div class="line"><span class="string">"中"</span></div></pre></td></tr></table></figure>
+</li>
+<li><p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString" target="_blank" rel="external">Number.prototype.toString</a></p>
+<blockquote>
+<p>将十进制码点转换成2进制。</p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> code = <span class="number">20013</span>;</div><div class="line">code.toString(<span class="number">2</span>);</div><div class="line"><span class="string">"100111000101101"</span></div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>互相转换源代码如下:</p>
+<ul>
+<li><p>UTF-16 -&gt; UTF-8</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> Base64 = &#123;</div><div class="line">    ...,</div><div class="line">     <span class="attr">_utf8_encode</span>: <span class="function"><span class="keyword">function</span>(<span class="params">str</span>) </span>&#123;</div><div class="line">        <span class="comment">// 将换行符统一成\n</span></div><div class="line">        str = str.replace(<span class="regexp">/\r\n/g</span>, <span class="string">"\n"</span>);</div><div class="line">        <span class="keyword">let</span> out = <span class="string">""</span>;</div><div class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> n = <span class="number">0</span>; n &lt; str.length; n++) &#123;</div><div class="line">          <span class="keyword">let</span> unicode = str.charCodeAt(n);</div><div class="line">          <span class="keyword">if</span> ((unicode &gt;= <span class="number">0x0001</span>) &amp;&amp; (unicode &lt;= <span class="number">0x007f</span>)) &#123;</div><div class="line">            <span class="comment">//在这个范围内的是ASCII字符,只需一个字节。</span></div><div class="line">            out += str.charAt(n);</div><div class="line">          &#125; <span class="keyword">else</span> <span class="keyword">if</span> (unicode &gt; <span class="number">0x07ff</span>) &#123;</div><div class="line">            <span class="comment">//将16位unicode前四位和1110xxxx 进行拼接</span></div><div class="line">            out += <span class="built_in">String</span>.fromCharCode(<span class="number">0xe0</span> | ((unicode &gt;&gt; <span class="number">12</span>) &amp; <span class="number">0x0f</span>));</div><div class="line">            <span class="comment">//将接下来的6位和10xxxxxx进行拼接</span></div><div class="line">            out += <span class="built_in">String</span>.fromCharCode(<span class="number">0x80</span> | ((unicode &gt;&gt;  <span class="number">6</span>) &amp; <span class="number">0x3f</span>));</div><div class="line">            <span class="comment">//将接下来的6位和10xxxxxx进行拼接</span></div><div class="line">            out += <span class="built_in">String</span>.fromCharCode(<span class="number">0x80</span> | ((unicode &gt;&gt;  <span class="number">0</span>) &amp; <span class="number">0x3f</span>));</div><div class="line">          &#125; <span class="keyword">else</span> &#123;</div><div class="line">            <span class="comment">//将16位unicode前5位和110xxxxx 进行拼接</span></div><div class="line">            out += <span class="built_in">String</span>.fromCharCode(<span class="number">0xc0</span> | ((unicode &gt;&gt;  <span class="number">6</span>) &amp; <span class="number">0x1f</span>));</div><div class="line">            <span class="comment">//将接下来的6位和10xxxxxx进行拼接</span></div><div class="line">            out += <span class="built_in">String</span>.fromCharCode(<span class="number">0x80</span> | ((unicode &gt;&gt;  <span class="number">0</span>) &amp; <span class="number">0x3f</span>));</div><div class="line">          &#125;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> out;</div><div class="line">      &#125;,</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>UTF8 -&gt; UTF-16</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> Base64 = &#123;</div><div class="line">  ...,</div><div class="line">   <span class="attr">_utf8_decode</span>: <span class="function"><span class="keyword">function</span>(<span class="params">str</span>) </span>&#123;</div><div class="line">      <span class="keyword">let</span> out = <span class="string">""</span>,n = <span class="number">0</span>, c1,c2,c3;</div><div class="line">      c1 = c2 = c3 = <span class="number">0</span>;</div><div class="line">      <span class="keyword">while</span> (n &lt; str.length) &#123;</div><div class="line">        c1 = str.charCodeAt(n);</div><div class="line">        <span class="keyword">if</span> (c1 &lt; <span class="number">0x80</span>) &#123;</div><div class="line">          <span class="comment">//编码为0xxxxxxx 表示utf8 一个字节</span></div><div class="line">          out += <span class="built_in">String</span>.fromCharCode(c1);</div><div class="line">          n++</div><div class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (c1 &gt; <span class="number">0xc0</span> &amp;&amp; c1 &lt; <span class="number">0xe0</span>) &#123;</div><div class="line">          <span class="comment">//编码为110xxxxx 10xxxxxx 表示2个字节</span></div><div class="line">          c2 = str.charCodeAt(n + <span class="number">1</span>);</div><div class="line">          out += <span class="built_in">String</span>.fromCharCode((c1 &amp; <span class="number">0x1f</span>) &lt;&lt; <span class="number">6</span> | c2 &amp; <span class="number">0x3f</span>);</div><div class="line">          n += <span class="number">2</span></div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">          <span class="comment">//编码为1110xxxx 10xxxxxx 0xxxxxxx 表示utf8 三个字节</span></div><div class="line">          c2 = str.charCodeAt(n + <span class="number">1</span>);</div><div class="line">          c3 = str.charCodeAt(n + <span class="number">2</span>);</div><div class="line">          out += <span class="built_in">String</span>.fromCharCode((c1 &amp; <span class="number">0x0f</span>) &lt;&lt; <span class="number">12</span> | (c2 &amp; <span class="number">0x3f</span>) &lt;&lt; <span class="number">6</span> | c3 &amp; <span class="number">0x3f</span>);</div><div class="line">          n += <span class="number">3</span></div><div class="line">        &#125;</div><div class="line">      &#125;</div><div class="line">      <span class="keyword">return</span> out</div><div class="line">    &#125;,</div><div class="line">  ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="base64编码和解码的实现"><a href="#base64编码和解码的实现" class="headerlink" title="base64编码和解码的实现"></a>base64编码和解码的实现</h3><ul>
+<li><p>base64编码 </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> Base64 = &#123;</div><div class="line">  ...,</div><div class="line">  <span class="comment">//base64 所用的64个字符和其中的一个补位符'='</span></div><div class="line">  _keyStr: <span class="string">"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="</span>,</div><div class="line">  <span class="attr">encode</span>: <span class="function"><span class="keyword">function</span>(<span class="params">str</span>) </span>&#123;</div><div class="line">    <span class="comment">//base64转换算法就是根据具体的规则将3个字符变成四个字符。</span></div><div class="line">    <span class="keyword">let</span> out = <span class="string">""</span>,c1,c2,c3,</div><div class="line">      outC1,outC2,outC3,outC4,i = <span class="number">0</span>;</div><div class="line">    str = Base64._utf8_encode(str); <span class="comment">//将utf16 转换成utf8,因为JavaScript内部采用的是utf16存储所以要进行一步转换。</span></div><div class="line">    <span class="keyword">while</span> (i &lt; str.length) &#123;</div><div class="line">      <span class="comment">// 三个三个字符一组进行转换</span></div><div class="line">      c1 = str.charCodeAt(i++);</div><div class="line">      c2 = str.charCodeAt(i++);</div><div class="line">      c3 = str.charCodeAt(i++);</div><div class="line">      outC1 = c1 &gt;&gt; <span class="number">2</span>; <span class="comment">//第一个字符最前面添加两个0,剩余2位用作后面拼接</span></div><div class="line">      outC2 = (c1 &amp; <span class="number">0x03</span>) &lt;&lt; <span class="number">4</span> | c2 &gt;&gt; <span class="number">4</span>; <span class="comment">// 第一个字符剩下两位和第二个字符前四位拼接,并在前面添加2个0拼成一个字符</span></div><div class="line">      outC3 = (c2 &amp; <span class="number">0x0f</span>) &lt;&lt; <span class="number">2</span> | c3 &gt;&gt; <span class="number">6</span>; <span class="comment">//第二个字符剩余4位和第三个字符的前两位,并在前面添加2个0拼接成一个字符</span></div><div class="line">      outC4 = c3 &amp; <span class="number">0x3f</span>; <span class="comment">//第三个字符剩下的6位前面添加两个0 拼接成一个字符</span></div><div class="line">      <span class="comment">//如果c2为不存在则最后两个字符为补位符'=' 如果c3不存在 则转换后最后一位为补位'='</span></div><div class="line">      <span class="keyword">if</span> (<span class="built_in">isNaN</span>(c2)) &#123; outC3 = outC4 = <span class="number">64</span> &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">isNaN</span>(c3)) &#123; outC4 = <span class="number">64</span> &#125;</div><div class="line">      out = out + <span class="keyword">this</span>._keyStr.charAt(outC1) + <span class="keyword">this</span>._keyStr.charAt(outC2) + <span class="keyword">this</span>._keyStr.charAt(outC3) + <span class="keyword">this</span>._keyStr.charAt(outC4)</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> out</div><div class="line">  &#125;,</div><div class="line">  ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>base64 解码</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> Base64 = &#123;</div><div class="line">    ...,</div><div class="line">    <span class="attr">decode</span>: <span class="function"><span class="keyword">function</span>(<span class="params">str</span>) </span>&#123;</div><div class="line">        <span class="keyword">let</span> out = <span class="string">''</span>,c1,c2,c3,c4,outC1,outC2,outC3,i = <span class="number">0</span>;</div><div class="line">        <span class="comment">//去掉非base64字符</span></div><div class="line">        str = str.replace(<span class="regexp">/[^A-Za-z0-9+/=]/g</span>, <span class="string">""</span>);</div><div class="line">        <span class="comment">//循环处理进行解码</span></div><div class="line">        <span class="keyword">while</span> (i &lt; str.length) &#123;</div><div class="line">          <span class="comment">//4个base64字符一组,解码后将转换成3个字符</span></div><div class="line">          c1 = <span class="keyword">this</span>._keyStr.indexOf(str.charAt(i++));</div><div class="line">          c2 = <span class="keyword">this</span>._keyStr.indexOf(str.charAt(i++));</div><div class="line">          c3 = <span class="keyword">this</span>._keyStr.indexOf(str.charAt(i++));</div><div class="line">          c4 = <span class="keyword">this</span>._keyStr.indexOf(str.charAt(i++));</div><div class="line">          <span class="comment">//每个字符前面都会有两个前导0</span></div><div class="line">          outC1 = c1 &lt;&lt; <span class="number">2</span> | c2 &gt;&gt; <span class="number">4</span>; <span class="comment">//第一个base64字符去掉两个0后和第二个字符的开头两个字符拼成一个字节</span></div><div class="line">          outC2 = (c2 &amp; <span class="number">0x0f</span>) &lt;&lt; <span class="number">4</span> | c3 &gt;&gt; <span class="number">2</span>; <span class="comment">//第二个剩下的4位和第三个开始的四位拼成一个字节</span></div><div class="line">          outC3 = (c3 &amp; <span class="number">0x03</span>) &lt;&lt; <span class="number">6</span> | c4; <span class="comment">// 第三个剩下的2位和第四个6位拼成一个字节</span></div><div class="line">          out = out + <span class="built_in">String</span>.fromCharCode(outC1);</div><div class="line">          <span class="comment">//如果倒数第二个不是补位符'='</span></div><div class="line">          <span class="keyword">if</span> (c3 != <span class="number">64</span>) &#123; out = out + <span class="built_in">String</span>.fromCharCode(outC2) &#125;</div><div class="line">          <span class="comment">//如果倒数第一个不是补位符'='</span></div><div class="line">          <span class="keyword">if</span> (c4 != <span class="number">64</span>) &#123; out = out + <span class="built_in">String</span>.fromCharCode(outC3) &#125;</div><div class="line">        &#125;</div><div class="line">        out = Base64._utf8_decode(out); <span class="comment">// 将utf8转成utf16</span></div><div class="line">        <span class="keyword">return</span> out</div><div class="line">      &#125;,</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="Update-2017-03-15"><a href="#Update-2017-03-15" class="headerlink" title="Update: 2017-03-15"></a>Update: 2017-03-15</h3><p>根据<a href="https://tools.ietf.org/html/rfc3548#page-6" target="_blank" rel="external">rfc3548</a>,base64中的某些字符,在一些文件系统环境下或者url中会有特殊的含义,比如斜杠,所以为了得到web safe 的base64编码,则需要将第62个字符和第63个字符(编号从0开始)替换成 <code>-</code>(minus) 和 <code>_</code>(underscore) 减号和下划线。<br>可以对编码后的base64进行字符替换如下 :</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">urlSafeBase64Encode</span>(<span class="params">input</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> input.replace(<span class="string">'+'</span>, <span class="string">'-'</span>).replace(<span class="string">'/'</span>, <span class="string">'_'</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="完整代码"><a href="#完整代码" class="headerlink" title="完整代码"></a><a href="https://github.com/xdimh/jsTools/blob/master/base64_with_comment.js" target="_blank" rel="external">完整代码</a></h3><h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ol>
+<li><a href="https://zh.wikipedia.org/wiki/UTF-8" target="_blank" rel="external">维基百科UTF-8</a></li>
+<li><a href="https://zh.wikipedia.org/wiki/Unicode" target="_blank" rel="external">维基百科Unicode</a></li>
+<li><a href="http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html" target="_blank" rel="external">字符编码笔记：ASCII，Unicode和UTF-8 —— 阮一峰</a></li>
+<li><a href="http://www.ruanyifeng.com/blog/2008/06/base64.html" target="_blank" rel="external">Base64笔记 —— 阮一峰</a></li>
+<li><a href="http://www.ruanyifeng.com/blog/2014/12/unicode.html" target="_blank" rel="external">Unicode与JavaScript详解 —— 阮一峰</a></li>
+<li><a href="http://blog.csdn.net/thl789/article/details/7506133" target="_blank" rel="external">Unicode编码及其实现：UTF-16、UTF-8，and more</a></li>
+<li><a href="https://segmentfault.com/a/1190000005794963" target="_blank" rel="external">通过javascript进行UTF-8编码</a></li>
+<li><a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/Bitwise_Operators" target="_blank" rel="external">按位操作符</a></li>
+</ol>
+</div><script type="text/javascript" src="/js/share.js?v=1.0.1" async></script><a data-url="http://weeklyweb.info/2017/04/26/base64/" data-id="cj5c9pqmg0002qffl7vf80ph4" class="article-share-link">分享到</a><div class="tags"><a href="/tags/前端大杂烩/"><span class="icon icon-clip"></span><span class="name">前端大杂烩</span></a></div><div class="post-nav"><a href="/2017/04/26/regular-expression/" class="pre">JavaScript中的正则表达式之正向环视(正向断言)</a><a href="/2017/04/26/gulp-plugin-develop/" class="next">gulp 插件开发</a></div><div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div><script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script><script>var cloudTieConfig = {
+  url: document.location.href,
+  sourceId: "",
+  productKey: "151c661ff0ff41c18669a374d3f8f153",
+  target: "cloud-tie-wrapper"
+};
+var yunManualLoad = true;
+Tie.loader("aHR0cHM6Ly9hcGkuZ2VudGllLjE2My5jb20vcGMvbGl2ZXNjcmlwdC5odG1s", true);</script></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="搜索" type="text" name="q" results="0" autocomplete="off"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><span class="icon icon-category"></span><span class="widget-txt">分类</span></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/NodeJS/">NodeJS</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/NodeJS/nodeclub源码学习/">nodeclub源码学习</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/NodeJS/前端大杂烩/">前端大杂烩</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/React/">React</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/React-Native/">React Native</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/nodeclub源码学习/">nodeclub源码学习</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端大杂烩/">前端大杂烩</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/构建工具/">构建工具</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/构建工具/前端大杂烩/">前端大杂烩</a><span class="category-list-count">1</span></li></ul></li></ul></div><div class="widget"><div class="widget-title"><span class="icon icon-clip"></span><span class="widget-txt">标签</span></div><div class="tagcloud"><a href="/tags/前端大杂烩/" style="font-size: 15px;">前端大杂烩</a> <a href="/tags/JavaScript/" style="font-size: 15px;">JavaScript</a> <a href="/tags/NodeJS/" style="font-size: 15px;">NodeJS</a> <a href="/tags/Mongoose/" style="font-size: 15px;">Mongoose</a> <a href="/tags/Mongodb/" style="font-size: 15px;">Mongodb</a> <a href="/tags/React/" style="font-size: 15px;">React</a> <a href="/tags/React-Native/" style="font-size: 15px;">React Native</a> <a href="/tags/webpack/" style="font-size: 15px;">webpack</a> <a href="/tags/git/" style="font-size: 15px;">git</a> <a href="/tags/npm/" style="font-size: 15px;">npm</a></div></div><div class="widget"><div class="widget-title"><span class="icon icon-article"></span><span class="widget-txt">最新文章</span></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2017/06/24/git-and-npm/">git 和 npm 常用命令汇总</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/08/webpack1-to-webpack2/">升级项目中的 webpack1.x 到 webpack2.x , 完善项目构建打包</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/06/event-proxy/">eventproxy 源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/05/fe-event-loop/">JavaScript 和 NodeJS 事件循环</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/03/javascript-event-loop/">什么是JavaScript 事件循环 ?</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/27/mongoose-tutorial-2/">Mongoose 学习笔记二 — Query 和 Population</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/26/react-life-cycle/">React 的生命周期</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/26/ngrok/">使用ngrok让你的本地mock可以提供给外网访问</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/26/redux-introduction/">Redux 简介</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/26/regular-expression/">JavaScript中的正则表达式之正向环视(正向断言)</a></li></ul></div><div class="widget"><div class="widget-title"><span class="icon icon-link"></span><span class="widget-txt">友情链接</span></div><ul></ul><a href="http://fex.baidu.com/" title="百度FEX" target="_blank">百度FEX</a><ul></ul><a href="http://www.aliued.com/" title="阿里巴巴UED" target="_blank">阿里巴巴UED</a><ul></ul><a href="http://f2e.souche.com/blog/" title="搜车大无线团队博客" target="_blank">搜车大无线团队博客</a><ul></ul><a href="http://fe.meituan.com/" title="美团前端团队博客" target="_blank">美团前端团队博客</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">© <a>2017 </a><a href="/." rel="nofollow">~Refresh的前端周记</a></div></div></div><a id="rocket" href="#top" class="show"></a><script type="text/javascript" src="/js/totop.js?v=1.0.1" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.0.47/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=1.0.1" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.0.47/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=1.0.1"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?4c66f02c419b1b8b035290646cd20eaf";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+  })();
+</script><script>(function () {
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=1.0.1"></script><script type="text/javascript" src="/js/smartresize.js?v=1.0.1"></script></div></body></html>

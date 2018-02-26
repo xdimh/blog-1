@@ -3,7 +3,7 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: 前端周记
+title: ~Refresh的前端之路
 subtitle: 一条道走到黑
 description: 前端周记,前端分享,前端实践,前端技术文章翻译,项目总结,知识点记录,心得体会分享,新技术调研。好记性不如烂笔头,记录自己做项目过程中的一些心得体会,遇到过并填过的坑以及自平时己学习的新知识,摸过的鱼。
 keywords : '前端周记,前端开发,前端分享,前端实践,FE,Front End,React,React Native,NodeJS,Vue,Electron'
@@ -14,7 +14,7 @@ timezone:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://weeklyweb.info
+url: https://blog.wfuny.com
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:

@@ -2,7 +2,7 @@
 title: eventproxy 源码解析
 type: original
 tags: [JavaScript,NodeJS]
-categories: [nodeclub源码学习]
+categories: [NodeJS,nodeclub源码学习]
 date: 2017-05-06 16:09:19
 description:
 ---
