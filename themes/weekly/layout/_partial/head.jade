@@ -8,7 +8,7 @@ head
     meta(name='description', content=config.description)
     meta(name='baidu-site-verification', content="gC9bUYul0P")
     block title
-    link(rel='stylesheet', type='text/css', href=url_for(theme.css) + '/style.css' + '?v=' + theme.version)
+    link(rel='stylesheet', type='text/css', href=config.url + url_for(theme.css) + '/style.css' + '?v=' + theme.version)
     link(rel='stylesheet', type='text/css', href='//cdn.bootcss.com/normalize/6.0.0/normalize.min.css')
     link(rel='stylesheet', type='text/css', href='//cdn.bootcss.com/pure/0.6.2/pure-min.css')
     link(rel='stylesheet', type='text/css', href='//cdn.bootcss.com/pure/0.6.2/grids-responsive-min.css')

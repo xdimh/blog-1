@@ -66,8 +66,8 @@ timeline:
     word: More
 
 # Static files
-js: //js
-css: //css
+js: js
+css: css
 
 # Theme version
 version: 1.0.1
