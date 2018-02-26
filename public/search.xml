@@ -58,7 +58,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">Changes not staged for commit:</div><div class="line">  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)</div><div class="line">  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)</div><div class="line"></div><div class="line">        modified:   .deploy_git (new commits)</div><div class="line">        modified:   source/_posts/event-proxy.md</div><div class="line">        modified:   source/_posts/fe-event-loop.md</div><div class="line">        modified:   source/_posts/webpack1-to-webpack2.md</div><div class="line">        modified:   themes/weekly/source/js/coupon.js</div><div class="line">        modified:   themes/weekly/source/js/couponfs.js</div><div class="line"></div><div class="line">Untracked files:</div><div class="line">  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)</div><div class="line"></div><div class="line">        public/</div><div class="line">        source/_drafts/</div><div class="line">        source/_posts/git-and-npm.md</div></pre></td></tr></table></figure>
 <p>可以看到有些文件虽然被修改了 但是还是处于untracked状态,那么我们可以通过<code>git add .</code> 命令一次将显示的所有untracked文件变成待提交状态。这个时候我们就可以通过<code>git commit -m &#39;msg&#39;</code> 来提交这次修改,如果我们想把这个分支也同步到远程仓库去就需要通过命令<code>git push origin new_branch_name</code> , 这样远程仓库就也有一个和本地一样的分支,团队中的其他成员就可以checkout,并在同一个分支上进行就改,如果不需要将这个分支push到远程仓库,那么你也可以通过<code>git checkout master</code> 先切换到master分支,然后通过命令 <code>git merge new_branch_name</code> 将分支内容合并到本地master 分支上,然后<code>git pull &amp;&amp; git add . &amp;&amp; git commit -m &#39;msg&#39; &amp;&amp; git push origin master</code> 将master新提交的内容同步到远程。然后通过命令 <code>git branch -d new_branch_name</code>删除本地分支。 当代码到达一个阶段趋于稳定后,我们就会进行一个发版,这个时候就需要给代码打一个tag,作为一个阶段节点,我们可以通过命令<code>git tag -a v1.1.4 -m &#39;版本更新内容&#39;</code> 新建一个tag,这个时候如果发现我们tag版本更新内容写错了,我们可以将刚刚建立的tag,删除掉,通过<code>git tag -d v1.1.4</code> 重新建一个,然后我们将tag标签push到远程仓库 <code>git push origin v1.1.4</code>。</p>
 <h2 id="Git-常见问题"><a href="#Git-常见问题" class="headerlink" title="Git 常见问题"></a>Git 常见问题</h2><ol>
-<li><p>如何删除远程仓库的一次错误提交 </p>
+<li><p>如何删除远程仓库的一次错误提交 ?</p>
 <ul>
 <li><p>git reset commit-id </p>
 <p>  本地先切换到正确提交节点</p>
@@ -73,7 +73,7 @@
 </li>
 </ol>
 <ol>
-<li><p>如何删除远程仓库的一次错误tag </p>
+<li><p>如何删除远程仓库的一次错误tag ?</p>
 <ul>
 <li><p>git tag -d <tagname> &amp;&amp; git push origin :refs/tags/<tagname></tagname></tagname></p>
 <p>  删除本地tag,然后推送一个空tag到远程,等同于删除远程tag</p>
@@ -82,7 +82,7 @@
 </li>
 </ol>
 <ol>
-<li><p>如何解决更新的时候因为本地有修改,不能成功更新的问题</p>
+<li><p>如何解决更新的时候因为本地有修改,不能成功更新的问题?</p>
 <ul>
 <li><p>git stash </p>
 <p>  暂存本地修改内容</p>
@@ -93,6 +93,11 @@
 <li><p>git stash pop </p>
 <p>  弹出本地内容进行合并,如果有冲突则进行冲突解决</p>
 </li>
+</ul>
+</li>
+<li><p>如何从tag检出代码?</p>
+<ul>
+<li>git checkout -b branch_name tag_name</li>
 </ul>
 </li>
 </ol>
@@ -300,7 +305,7 @@
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">EventProxy.prototype.once = <span class="function"><span class="keyword">function</span> (<span class="params">ev, callback</span>) </span>&#123;</div><div class="line">  <span class="keyword">var</span> self = <span class="keyword">this</span>;</div><div class="line">  <span class="comment">//包装回调函数，执行完后自己解绑。</span></div><div class="line">  <span class="keyword">var</span> wrapper = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">    callback.apply(self, <span class="built_in">arguments</span>);</div><div class="line">    self.unbind(ev, wrapper);</div><div class="line">  &#125;;</div><div class="line">  <span class="keyword">this</span>.bind(ev, wrapper);</div><div class="line">  <span class="keyword">return</span> <span class="keyword">this</span>;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
 <p>通过对callback 进行一层包装,包装后的函数会在运行callback后 <code>self.unbind(ev, wrapper);</code> 进行自我解绑,从而使得callback只会触发执行一次。</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 方法使用优先级 setImmediate -&gt; nextTick -&gt; setTimeout</span></div><div class="line"> <span class="keyword">var</span> later = (<span class="keyword">typeof</span> setImmediate !== <span class="string">'undefined'</span> &amp;&amp; setImmediate) ||</div><div class="line">   (<span class="keyword">typeof</span> process !== <span class="string">'undefined'</span> &amp;&amp; process.nextTick) || <span class="function"><span class="keyword">function</span> (<span class="params">fn</span>) </span>&#123;</div><div class="line">   setTimeout(fn, <span class="number">0</span>);</div><div class="line"> &#125;;</div></pre></td></tr></table></figure>
-<p>这里定义了异步方法,各个方法的区别和有关事件循环的内容可以参看我总结的另一篇文章<a href="http://weeklyweb.info/2017/05/05/fe-event-loop/">JavaScript &amp; NodeJS 事件循环</a>。</p>
+<p>这里定义了异步方法,各个方法的区别和有关事件循环的内容可以参看我总结的另一篇文章<a href="http://weeklyweb.info/2017/05/05/fe-event-loop/" target="_blank" rel="external">JavaScript &amp; NodeJS 事件循环</a>。</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"> <span class="comment">//使得触发事件行为变成异步</span></div><div class="line">EventProxy.prototype.emitLater = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">  <span class="keyword">var</span> self = <span class="keyword">this</span>;</div><div class="line">  <span class="keyword">var</span> args = <span class="built_in">arguments</span>;</div><div class="line">  later(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">    self.trigger.apply(self, args);</div><div class="line">  &#125;);</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
 <p>不知道emitLater这个方法使用场景,根据代码可以知道就是延迟触发事件,不明觉厉了。</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 绑定完事件回调后立马先触发一次</span></div><div class="line">EventProxy.prototype.immediate = <span class="function"><span class="keyword">function</span> (<span class="params">ev, callback, data</span>) </span>&#123;</div><div class="line">  <span class="keyword">this</span>.bind(ev, callback); <span class="comment">// 绑定事件</span></div><div class="line">  <span class="keyword">this</span>.trigger(ev, data); <span class="comment">// 立马触发</span></div><div class="line">  <span class="keyword">return</span> <span class="keyword">this</span>;</div><div class="line">&#125;;</div><div class="line">EventProxy.prototype.asap = EventProxy.prototype.immediate;</div></pre></td></tr></table></figure>
@@ -363,9 +368,9 @@
         
         <tags>
             
-            <tag> JavaScript </tag>
-            
             <tag> NodeJS </tag>
+            
+            <tag> JavaScript </tag>
             
         </tags>
         
@@ -377,7 +382,7 @@
       <content type="html"><![CDATA[<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>　　在学习nodeclub源码的过程中,遇到了<a href="https://github.com/JacksonTian/eventproxy" target="_blank" rel="external">eventproxy</a> 这个解决金字塔回调问题的框架,为了更好的理解代码和出于好奇心,看了下 eventproxy 的源码实现,其中看到一段代码如下:</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> later = (<span class="keyword">typeof</span> setImmediate !== <span class="string">'undefined'</span> &amp;&amp; setImmediate) ||</div><div class="line">(<span class="keyword">typeof</span> process !== <span class="string">'undefined'</span> &amp;&amp; process.nextTick) || <span class="function"><span class="keyword">function</span> (<span class="params">fn</span>) </span>&#123;</div><div class="line">    setTimeout(fn, <span class="number">0</span>);</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
 <p>对setImmediate,process.nextTick,setTimeout 三者的区别不是很清晰,甚至对process.nextTick的作用和传入回调的执行时机也并不清楚。所以要弄清楚这些内容,就必须搞清楚 NodeJS 事件循环。</p>
-<h2 id="JavaScript-浏览器端的事件循环"><a href="#JavaScript-浏览器端的事件循环" class="headerlink" title="JavaScript 浏览器端的事件循环"></a>JavaScript 浏览器端的事件循环</h2><p>　　在深入到NodeJS的事件循环之前我们先来了解下浏览器端的事件循环,因为JavaScript是单线程的,如果没有事件循环机制的话,页面UI会因为一个耗时操作而卡死,详细内容见我之前的一篇翻译<a href="http://weeklyweb.info/2017/05/03/javascript-event-loop/">什么是JavaScript 事件循环 ?</a>。这里只是做简单的介绍。</p>
+<h2 id="JavaScript-浏览器端的事件循环"><a href="#JavaScript-浏览器端的事件循环" class="headerlink" title="JavaScript 浏览器端的事件循环"></a>JavaScript 浏览器端的事件循环</h2><p>　　在深入到NodeJS的事件循环之前我们先来了解下浏览器端的事件循环,因为JavaScript是单线程的,如果没有事件循环机制的话,页面UI会因为一个耗时操作而卡死,详细内容见我之前的一篇翻译<a href="http://weeklyweb.info/2017/05/03/javascript-event-loop/" target="_blank" rel="external">什么是JavaScript 事件循环 ?</a>。这里只是做简单的介绍。</p>
 <p><img src="http://rainypin.qiniudn.com/blog/images/event-loop.png" alt="Event-Loop"></p>
 <p>如图所示,在JS程序执行的时候,同步的 JavaScript 代码会在调用栈中被执行,异步的代码,如按钮点击事件处理函数,定时器,在图中就是webapis部分,在特定的事件触发或者时间到了定时器指定的耗时后,会从webapis区域移到任务队列部分,如果此时调用栈为空,没有任何代码正在执行的话,事件循环机制就会从队列中选择第一个待被执行的任务到调用栈中进行执行。那么 NodeJS 中的事件循环是怎样的呢?</p>
 <h2 id="NodeJS-事件循环"><a href="#NodeJS-事件循环" class="headerlink" title="NodeJS 事件循环"></a>NodeJS 事件循环</h2><p>　　相比浏览器中的事件循环,在NodeJS中要更加复杂一些,当 Node.js 启动时，它会初始化event loop，处理提供的代码（代码里可能会有异步API调用，timer，以及process.nextTick()），然后开始处理event loop。NodeJS中的事件循环分为几个阶段,按顺序执行。如下图:</p>
@@ -443,9 +448,9 @@
         
         <tags>
             
-            <tag> JavaScript </tag>
-            
             <tag> NodeJS </tag>
+            
+            <tag> JavaScript </tag>
             
         </tags>
         
