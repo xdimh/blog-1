@@ -33,11 +33,11 @@ body {
 }
 @font-face {
   font-family: 'icomoon';
-  src:  url('http://rainypin.qiniudn.com/blog/fonts/icomoon.eot?pyy0va');
-  src:  url('http://rainypin.qiniudn.com/blog/fonts/icomoon.eot?pyy0va#iefix') format('embedded-opentype'),
-    url('http://rainypin.qiniudn.com/blog/fonts/icomoon.ttf?pyy0va') format('truetype'),
-    url('http://rainypin.qiniudn.com/blog/fonts/icomoon.woff?pyy0va') format('woff'),
-    url('http://rainypin.qiniudn.com/blog/fonts/icomoon.svg?pyy0va#icomoon') format('svg');
+  src:  url('/fonts/icomoon.eot?pyy0va');
+  src:  url('/fonts/icomoon.eot?pyy0va#iefix') format('embedded-opentype'),
+    url('/fonts/icomoon.ttf?pyy0va') format('truetype'),
+    url('/fonts/icomoon.woff?pyy0va') format('woff'),
+    url('/fonts/icomoon.svg?pyy0va#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
 }

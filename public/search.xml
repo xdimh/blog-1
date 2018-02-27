@@ -126,7 +126,7 @@
     </entry>
     
     <entry>
-      <title><![CDATA[升级项目中的 webpack1.x 到 webpack2.x , 完善项目构建打包 - 测试]]></title>
+      <title><![CDATA[升级项目中的 webpack1.x 到 webpack2.x , 完善项目构建打包]]></title>
       <url>/2017/05/08/webpack1-to-webpack2/</url>
       <content type="html"><![CDATA[<h2 id="webpack-中模块解析"><a href="#webpack-中模块解析" class="headerlink" title="webpack 中模块解析"></a>webpack 中模块解析</h2><p>在webpack中,webpack解析如下三种类型的文件路径:</p>
 <ul>
@@ -368,9 +368,9 @@
         
         <tags>
             
-            <tag> JavaScript </tag>
-            
             <tag> NodeJS </tag>
+            
+            <tag> JavaScript </tag>
             
         </tags>
         
@@ -448,9 +448,9 @@
         
         <tags>
             
-            <tag> JavaScript </tag>
-            
             <tag> NodeJS </tag>
+            
+            <tag> JavaScript </tag>
             
         </tags>
         
